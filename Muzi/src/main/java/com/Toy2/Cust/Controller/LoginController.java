@@ -91,4 +91,9 @@ public class LoginController {
         return cust!=null && cust.getC_pwd().equals(c_pwd);
     }
 
+
+
+
+
+
 }

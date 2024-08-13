@@ -32,13 +32,15 @@
                 <option value="@kakao.com">@kakao.com</option>
             </select>
         </div>
+        <!-- 인증 결과를 표시할 영역 -->
+        <p id="resultMessage" class="result-message hiddenmsg"></p>
+
         <div class="form-group">
             <label for="authCode">인증번호 <span class="required">*</span></label>
             <input type="text" id="authCode" class="authCode" name="authCode" maxlength="10" required>
             <input id="verify" type="button" value="인증번호 받기" class="verify-btn" required>
         </div>
-        <!-- 인증 결과를 표시할 영역 -->
-        <p id="resultMessage" class="result-message hiddenmsg"></p>
+
         <!-- 비밀번호 유효성 검사 결과를 표시할 위치 -->
         <p id="password-check" class="feedback hiddenmsg"></p>
         <div class="form-group">
@@ -199,14 +201,18 @@
     })
 
 
-    /* 이메일 중복체크 */
+
     $('#email').on('input', function(){
         emailCheck();
     })
     $('#domain_list').on('change', function(){
         emailCheck();
     });
+    $('#authCode').on('input', function() {
+        verifyNumber();
+    });
 
+    /* 이메일 중복체크 */
     function emailCheck(){
         const email = document.getElementById("email").value.trim();    //trim(): email의 양쪽 공백을 제거
         const domain = document.getElementById("domain_list").value;
@@ -280,21 +286,47 @@
     }
 
     //인증번호 요청
-    $('#verify').on('click', function(){
-        const  code = $('#authCode').val();
-        $.post('/login/verify-code', {code : code}, function(response){
-            const resultMessage = $('#resultMessage');
+    $('#verify').click(function() {
+        const $this = $(this); // 클릭된 버튼을 jQuery 객체로 저장
+        $this.prop('disabled', true); // 버튼을 비활성화
 
-            if(response === "인증 성공"){
-                resultMessage.text("인증번가 일치합니다.");
-                resultMessage.css("color", "blue");
-            }else{
-                resultMessage.text("인증번호가 일치하지 않습니다.");
-                resultMessage.css("color", "red");
+        alert('인증번호가 전송되었습니다.'); // 인증번호 전송 알림
+
+        const email = $('#c_email').val(); // 이메일 주소값 얻어오기
+        console.log('완성된 이메일 : ' + email); // 이메일 오는지 확인
+        const checkInput = $('#authCode') // 인증번호 입력하는곳
+        const url = '/signup/mailCheck?email=' + email; // URL 생성
+        $.ajax({
+            type: 'GET',
+            url: url, // 생성한 URL 사용
+            success: function(data) {
+                console.log("data : " + data);
+                checkInput.attr('disabled', false);
+                code = data;
+                setTimeout(function() {
+                    $this.prop('disabled', false);
+                }, 7000);
             }
         });
     });
 
+    //인증번호 유효성 검사
+    function verifyNumber() {
+        const inputCode = $('#authCode').val().trim();
+
+        // 인증번호가 일치하는지 확인
+        if (inputCode === code) {
+            $('#resultMessage').html('인증번호가 일치합니다.');
+            $('#resultMessage').css('color', 'green');
+            $('#verify').attr('disabled', true);
+            $('#c_email').attr('readonly', true);
+            return true;
+        } else {
+            $('#resultMessage').html('인증번호를 다시 확인해주세요');
+            $('#resultMessage').css('color', 'red');
+            return false;
+        }
+    }
 
 </script>
 </body>
